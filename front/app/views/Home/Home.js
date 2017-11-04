@@ -1,12 +1,12 @@
 import React from 'react'
 
-import Menu from '../../components/Menu/Menu'
+// import SearchBar from '../../components/SearchBar/SearchBar'
+import Graph from '../Graph/Graph'
 import style from './Home.scss'
 
 const Home = () => (
   <div>
-    <Menu />
-    <div className={style.homeDiv}>HOME</div>
+    <Graph />
   </div>
 )
 
