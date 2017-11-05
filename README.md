@@ -7,22 +7,22 @@
  
 #### Installing dependecies:
 
-**Server:**
+Server:
 
 ```$ pip3 install flask```
 
 ```$ pip3 install flask-cors```
 
-**Frontend:**
+Frontend:
 
 ```$ cd front; npm install```
 
 #### Running application:
 
-**Server:**
+Server:
 
 ```$ python3 index.py```
 
-**Frontend:**
+Frontend:
 
 ```$ cd front; npm run dev```
