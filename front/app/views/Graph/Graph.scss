@@ -1,0 +1,36 @@
+.search {
+  position: fixed;
+  //border: 1px solid black;
+  width: 0;
+  height: 0;
+  left: 50%;
+  bottom: 50%;
+  transform: translateX(-50%);
+  transition: width 0.4s, height 0.4s, bottom 0.4s;
+  transition-timing-function: cubic-bezier(.16,1.12,.84,1.11);
+  overflow: hidden;
+  border-radius: 5px;
+  background-color: white;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.searchBackground {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-color: rgba(0, 0, 0, 0);
+  transition: background-color 0.4s;
+}
+
+.searchOpen {
+  width: 250px;
+  height: 250px;
+  bottom: calc(50% + 13px);
+}
+
+.searchBackgroundOpen {
+  background-color: rgba(0, 0, 0, 0.2);
+}

@@ -8,14 +8,14 @@ import Loader from '../Loader/Loader'
 
 import style from './SearchBar.scss'
 
-const mockData = [
-  { id: 1, title: 'Mother' },
-  { id: 2, title: 'Bałwanek' },
-  { id: 3, title: 'Prometeusz' },
-  { id: 4, title: 'Makbet' }
-]
+// const mockData = [
+//   { id: 1, title: 'Mother' },
+//   { id: 2, title: 'Bałwanek' },
+//   { id: 3, title: 'Prometeusz' },
+//   { id: 4, title: 'Makbet' }
+// ]
 
-const api = () => new Promise(resolve => setTimeout(() => resolve(mockData), 500))
+const api = query => fetch(`http://localhost:5000/movies?query=${encodeURI(query)}`)
 
 class SearchBar extends Component {
   constructor () {
@@ -32,12 +32,13 @@ class SearchBar extends Component {
   }
 
   search (text, timestamp) {
-    api()
-      .then((data) => {
+    api(text)
+      .then(data => data.json())
+      .then(({ results }) => {
         if (timestamp === this.inputTimestamp) {
           this.setState({
             loading: false,
-            data
+            data: results.slice(0, 10)
           })
         }
       })
@@ -81,12 +82,14 @@ class SearchBar extends Component {
                     {data.map(v => (
                       <li key={v.id}>
                         <div
+                          className={style.item}
                           role="button"
                           onClick={() => this.handleSelect(v.title)}
                           onKeyDown={e => e.keyCode === 13 && this.handleSelect(v.title)}
                           tabIndex="0"
                         >
-                          {v.title}
+                          <span>{v.title}</span>
+                          <span>{v.release_date.split('-')[0]}</span>
                         </div>
                       </li>
                     ))}

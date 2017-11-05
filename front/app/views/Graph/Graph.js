@@ -1,24 +1,36 @@
 import React, { Component } from 'react'
 import * as d3 from 'd3'
+import cx from 'classnames'
+
+import SearchBar from '../../components/SearchBar/SearchBar'
+
+import style from './Graph.scss'
+
+// const data = {
+//   nodes: [
+//     { id: 'Mother', group: 'film' },
+//     { id: 'Pasażerowie', group: 'film' },
+//     { id: 'Bałwanek', group: 'film' },
+//     { id: 'X-Men', group: 'film' },
+//     { id: 'Fassbender', group: 'actor' },
+//     { id: 'Lawrence', group: 'actor' },
+//     { id: 'Kilmer', group: 'actor' }
+//   ],
+//   links: [
+//     { source: 'Bałwanek', target: 'Fassbender', value: 1 },
+//     { source: 'Bałwanek', target: 'Kilmer', value: 1 },
+//     { source: 'X-Men', target: 'Fassbender', value: 1 },
+//     { source: 'X-Men', target: 'Lawrence', value: 1 },
+//     { source: 'Pasażerowie', target: 'Lawrence', value: 1 },
+//     { source: 'Mother', target: 'Lawrence', value: 1 }
+//   ]
+// }
 
 const data = {
   nodes: [
-    { id: 'Mother', group: 'film' },
-    { id: 'Pasażerowie', group: 'film' },
-    { id: 'Bałwanek', group: 'film' },
-    { id: 'X-Men', group: 'film' },
-    { id: 'Fassbender', group: 'actor' },
-    { id: 'Lawrence', group: 'actor' },
-    { id: 'Kilmer', group: 'actor' }
+    { id: 0, title: 'Click Me!', group: 'film' }
   ],
-  links: [
-    { source: 'Bałwanek', target: 'Fassbender', value: 1 },
-    { source: 'Bałwanek', target: 'Kilmer', value: 1 },
-    { source: 'X-Men', target: 'Fassbender', value: 1 },
-    { source: 'X-Men', target: 'Lawrence', value: 1 },
-    { source: 'Pasażerowie', target: 'Lawrence', value: 1 },
-    { source: 'Mother', target: 'Lawrence', value: 1 }
-  ]
+  links: []
 }
 
 class Graph extends Component {
@@ -29,6 +41,13 @@ class Graph extends Component {
     this.dragstarted = this.dragstarted.bind(this)
     this.dragged = this.dragged.bind(this)
     this.dragended = this.dragended.bind(this)
+    this.handleNodeClick = this.handleNodeClick.bind(this)
+
+    this.state = {
+      emptyGraph: true,
+      searchVisible: false,
+      searchOpen: true
+    }
   }
 
   componentDidMount () {
@@ -73,13 +92,12 @@ class Graph extends Component {
       .data(data.nodes)
       .enter()
       .append('text')
-      .text(d => d.id)
+      .text(d => d.title)
       .attr('font-family', 'sans-serif')
       .attr('font-size', '14px')
       .attr('fill', 'black')
-      .on('click', console.log)
 
-    this.node.on('click', console.log)
+    this.node.on('click', this.handleNodeClick)
 
     this.node.append('title')
       .text(d => d.id)
@@ -91,6 +109,7 @@ class Graph extends Component {
     this.simulation.force('link')
       .links(data.links)
     // }
+    this.showSearchPopup()
   }
 
   ticked () {
@@ -128,10 +147,53 @@ class Graph extends Component {
     d.fy = null
   }
 
+  showSearchPopup () {
+    this.setState({
+      searchVisible: true,
+      searchOpen: false
+    }, () => {
+      setTimeout(() => {
+        this.setState({
+          searchOpen: true
+        })
+      }, 25)
+    })
+  }
+
+  hideSearchPopup () {
+    this.setState({
+      searchOpen: false
+    }, () => {
+      setTimeout(() => {
+        this.setState({
+          searchVisible: false
+        })
+      }, 400)
+    })
+  }
+
+  handleNodeClick () {
+    const { emptyGraph } = this.state
+    if (emptyGraph) {
+      this.showSearchPopup()
+    }
+  }
+
   render () {
-    return (
-      <svg width={window.innerWidth} height="600" />
-    )
+    const { searchVisible, searchOpen } = this.state
+    return [
+      <svg key="svg" width={window.innerWidth} height={window.innerHeight} />,
+      searchVisible && (
+        <div
+          key="search"
+          className={cx(style.searchBackground, searchOpen && style.searchBackgroundOpen)}
+        >
+          <div className={cx(style.search, searchOpen && style.searchOpen)}>
+            <SearchBar />
+          </div>
+        </div>
+      )
+    ]
   }
 }
 
