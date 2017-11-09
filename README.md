@@ -21,8 +21,16 @@ Frontend:
 
 Server:
 
-```$ python3 index.py```
+```TBD```
 
-Frontend:
+**Frontend:**
+
+Development Mode:
 
 ```$ cd front; npm run dev```
+
+Production Mode:
+
+```$ cd front; npm run dev```
+
+```$ python3 index.py```
