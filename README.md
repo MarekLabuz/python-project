@@ -1,25 +1,25 @@
 # python-project
 
-### How to run:
-#### Requirements:
+## How to run:
+### Requirements:
  - Python 3+
  - Node.js, NPM: https://nodejs.org/en/
  
-#### Installing dependecies:
+### Installing dependecies:
 
-Server:
+**Server:**
 
 ```$ pip3 install flask```
 
 ```$ pip3 install flask-cors```
 
-Frontend:
+**Frontend:**
 
 ```$ cd front; npm install```
 
-#### Running application:
+### Running application:
 
-Server:
+**Server:**
 
 ```TBD```
 
