@@ -31,6 +31,6 @@ Development Mode:
 
 Production Mode:
 
-```$ cd front; npm run dev```
+```$ cd front; npm run build```
 
 ```$ python3 index.py```
