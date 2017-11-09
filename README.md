@@ -25,11 +25,11 @@
 
 **Frontend:**
 
-> Development Mode:
+\> Development Mode:
 
 ```$ cd front; npm run dev```
 
-> Production Mode:
+\> Production Mode:
 
 ```$ cd front; npm run build```
 
