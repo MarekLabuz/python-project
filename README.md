@@ -34,3 +34,7 @@
 ```$ cd front; npm run build```
 
 ```$ python3 index.py```
+
+**Database PostgresSQL**
+database.init
+sql-init.sql
