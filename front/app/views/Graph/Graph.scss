@@ -1,10 +1,9 @@
 .search {
   position: fixed;
-  //border: 1px solid black;
   width: 0;
   height: 0;
-  left: 50%;
-  bottom: 50%;
+  //left: 50%;
+  //bottom: 50%;
   transform: translateX(-50%);
   transition: width 0.4s, height 0.4s, bottom 0.4s;
   transition-timing-function: cubic-bezier(.16,1.12,.84,1.11);

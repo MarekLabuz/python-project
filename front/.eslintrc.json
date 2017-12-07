@@ -6,7 +6,9 @@
         "linebreak-style": 0,
         "comma-dangle": 0,
         "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
-        "class-methods-use-this": 0
+        "class-methods-use-this": 0,
+        "no-param-reassign": 0,
+        "max-len": 0
     },
     "env": {
         "browser": true,

@@ -1,98 +1,40 @@
-from flask import Flask, send_file, request, Response, make_response
+from flask import Flask, send_file, request, Response, jsonify
 from flask_cors import CORS
 
-
-import http.client
-import json
+# from api import search_movies_by_query
+from util import get_movie, get_actor, search_movies_by_query
 
 app = Flask(__name__)
 CORS(app)
 
-
-BASE_URL = 'theimdbapi.org'
 
 @app.route('/')
 def root():
     return send_file('./front/build/index.html', mimetype='text/html')
 
 
-
-def requestMovie(method, pathname):
-    conn = http.client.HTTPSConnection(BASE_URL)
-    payload = "{}"
-    headers = {'content-type': 'application/json;charset=utf-8'}
-    conn.request(method, pathname, payload, headers)
-    response = conn.getresponse()
-    content = response.read().decode('utf-8')
-    response = make_response(content)
-    response.headers['content-type'] = 'application/json'
-    diz = json.loads(content)
-
-    for d in diz:
-        title = d['title']
-        year = d['year']
-        rating = d['rating']
-        director = d['director']
-        genre = d['genre'][0]
-        character00 = d['cast'][0]['name']
-        character01 = d['cast'][1]['name']
-        character02 = d['cast'][2]['name']
-        character03 = d['cast'][3]['name']
-        character04 = d['cast'][4]['name']
-        character05 = d['cast'][5]['name']
-        character06 = d['cast'][6]['name']
-        character07 = d['cast'][7]['name']
-        character08 = d['cast'][8]['name']
-        character09 = d['cast'][9]['name']
-        break
-
-    return response
-
-def requestActor(method, pathname):
-    conn = http.client.HTTPSConnection(BASE_URL)
-    payload = "{}"
-    headers = {'content-type': 'application/json;charset=utf-8'}
-    conn.request(method, pathname, payload, headers)
-    response = conn.getresponse()
-    content = response.read().decode('utf-8')
-    response = make_response(content)
-    response.headers['content-type'] = 'application/json'
-    diz = json.loads(content)
-
-    for d in diz:
-        name = d['title']
-        birthday = d['birthday']
-        birthplace = d['birthplace']
-        image_link = d['image']['thumb']
-        break
-
-    return response
+@app.route('/bundle.js')
+def bundle():
+    return send_file('./front/build/bundle.js', mimetype='text/javascript')
 
 
-def search_movies(title,year):
-    return requestMovie('GET', '/api/find/movie?title={}&year={}'.format(title,year))
+@app.route('/movies')
+def movies():
+    query = request.args.get('query')
+    return Response(search_movies_by_query(query), mimetype='text/json')
 
-def search_actors(name):
-    return requestActor('GET', '/api/find/person?name={}'.format(name))    
+
+@app.route('/movie')
+def movie():
+    movie_id = request.args.get('id')
+    return jsonify(get_movie(movie_id))
 
 
-@app.route('/go')
-def go():
-  return search_movies('transformers',2007)
-  
-def get_movie(movie_id):
-  
-    movie = request('GET', '/3/movie/{}?'.format(movie_id))
-    movie = json.loads(movie)
+@app.route('/actor')
+def actor():
+    actor_id = request.args.get('id')
+    return jsonify(get_actor(actor_id))
 
-    #add new movie to database
-    try:
-      print('The movie is added to the database')
-    except BaseException as e:
-      print('Could not insert data into the database. Response from API: ' + str(movie) + '    ' + str(e))
-
-    print('Movie is in the database')
-    return "movie in database"
 
 if __name__ == '__main__':
     app.run()

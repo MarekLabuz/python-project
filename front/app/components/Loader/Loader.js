@@ -6,12 +6,18 @@ import style from './Loader.scss'
 function Loading () {
   return (
     <div className={style.container}>
-      <div className={style.loader} />
-      <div className={style.loader} />
-      <div className={style.loader} />
-      <div className={style.loader} />
-      <div className={style.loader} />
-      <div className={style.loader} />
+      <div className={style.arm} />
+      <div className={style.arm} />
+      <div className={style.arm} />
+      <div className={style.arm} />
+      <div className={style.arm} />
+      <div className={style.arm} />
+      <div className={style.arm} />
+      <div className={style.arm} />
+      <div className={style.arm} />
+      <div className={style.arm} />
+      <div className={style.arm} />
+      <div className={style.arm} />
     </div>
   )
 }

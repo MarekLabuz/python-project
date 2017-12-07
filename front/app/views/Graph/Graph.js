@@ -26,12 +26,12 @@ import style from './Graph.scss'
 //   ]
 // }
 
-const data = {
-  nodes: [
-    { id: 0, title: 'Click Me!', group: 'film' }
-  ],
-  links: []
-}
+// const data = {
+//   nodes: [
+//     { id: 0, title: 'Click Me!', group: 'film' }
+//   ],
+//   links: []
+// }
 
 class Graph extends Component {
   constructor () {
@@ -42,74 +42,98 @@ class Graph extends Component {
     this.dragged = this.dragged.bind(this)
     this.dragended = this.dragended.bind(this)
     this.handleNodeClick = this.handleNodeClick.bind(this)
+    this.hideSearchPopup = this.hideSearchPopup.bind(this)
+    this.handleDataUpdate = this.handleDataUpdate.bind(this)
 
     this.state = {
-      emptyGraph: true,
       searchVisible: false,
-      searchOpen: true
+      searchOpen: true,
+      data: {
+        nodes: [
+          { id: 0, title: 'Click Me!', group: 'mock' }
+        ],
+        links: []
+      }
     }
   }
 
   componentDidMount () {
-    const svg = d3.select('svg')
-    const width = svg.attr('width')
-    const height = svg.attr('height')
+    this.renderGraph()
+  }
 
-    const color = d3.scaleOrdinal(d3.schemeCategory20)
+  componentDidUpdate (prevProps, prevState) {
+    if (prevState.data !== this.state.data) {
+      this.updateGraph()
+    }
+  }
 
-    this.simulation = d3.forceSimulation()
-      .force('link', d3.forceLink().distance(100).id(d => d.id))
-      .force('charge', d3.forceManyBody())
-      .force('center', d3.forceCenter(width / 2, height / 2))
-
-    // d3.json('miserables.json', function (error, graph) {
-    //   if (error) throw error
-
-    this.link = svg.append('g')
-      .attr('class', 'links')
-      .selectAll('line')
-      .data(data.links)
-      .enter()
-      .append('line')
-      .attr('stroke-width', d => Math.sqrt(d.value))
-
-    this.node = svg.append('g')
-      .attr('class', 'nodes')
-      .selectAll('circle')
-      .data(data.nodes)
-      .enter()
-      .append('circle')
-      .attr('r', 9)
-      .attr('fill', d => color(d.group))
-      .call(d3.drag()
-        .on('start', this.dragstarted)
-        .on('drag', this.dragged)
-        .on('end', this.dragended))
-
-    this.textLabels = svg.append('g')
-      .attr('class', 'textLabels')
-      .selectAll('text')
-      .data(data.nodes)
-      .enter()
-      .append('text')
-      .text(d => d.title)
-      .attr('font-family', 'sans-serif')
-      .attr('font-size', '14px')
-      .attr('fill', 'black')
-
-    this.node.on('click', this.handleNodeClick)
-
-    this.node.append('title')
-      .text(d => d.id)
-
-    this.simulation
-      .nodes(data.nodes)
-      .on('tick', this.ticked)
-
-    this.simulation.force('link')
-      .links(data.links)
-    // }
+  handleNodeClick ({ x, y }) {
+    this.popupX = x
+    this.popupY = y
     this.showSearchPopup()
+  }
+
+  hideSearchPopup () {
+    this.setState({
+      searchOpen: false
+    }, () => {
+      setTimeout(() => {
+        this.setState({
+          searchVisible: false
+        })
+      }, 200)
+    })
+  }
+
+  showSearchPopup () {
+    this.setState({
+      searchVisible: true,
+      searchOpen: false
+    }, () => {
+      setTimeout(() => {
+        this.setState({
+          searchOpen: true
+        })
+      }, 25)
+    })
+  }
+
+  handleDataUpdate (film) {
+    const nodesIds = [film.id, ...film.people.map(person => person.id)]
+    const linksIds = film.people.map(person => ({ source: film.id, target: person.id }))
+    this.setState(state => ({
+      data: {
+        nodes: state.data.nodes
+          .filter(({ id }) => !nodesIds.includes(id) && id !== 0)
+          .concat([{ id: film.id, title: film.title, group: 'film' }])
+          .concat(film.people.map(person => ({ id: person.id, title: person.name, group: 'person' }))),
+        links: state.data.links
+          .filter(({ source, target }) => !linksIds.some(link => link.source === source.id && link.target === target.id))
+          .map(link => ({ ...link, source: link.source.id, target: link.target.id }))
+          .concat(film.people.map(person => ({
+            source: film.id,
+            target: person.id,
+            value: 1
+          })))
+      }
+    }))
+  }
+
+  dragstarted (d) {
+    if (!d3.event.active) this.simulation.alphaTarget(0.3).restart()
+    d.fx = d.x
+    d.fy = d.y
+  }
+
+  dragged (d) {
+    d.fx = d3.event.x
+    d.fy = d3.event.y
+  }
+
+  dragended (d) {
+    if (!d3.event.active) this.simulation.alphaTarget(0)
+    d.fx = null
+    d.fy = null
   }
 
   ticked () {
@@ -130,53 +154,82 @@ class Graph extends Component {
       .attr('dy', d => d.y - 15)
   }
 
-  dragstarted (d) {
-    if (!d3.event.active) this.simulation.alphaTarget(0.3).restart()
-    d.fx = d.x
-    d.fy = d.y
+  updateGraph () {
+    const { data } = this.state
+    const color = d3.scaleOrdinal(d3.schemeCategory20)
+
+    this.link = this.link.data(data.links)
+
+    this.link.exit().remove()
+    this.link = this.link
+      .enter()
+      .append('line')
+      .attr('class', 'link')
+      .attr('stroke-width', d => d.value)
+      .attr('stroke', 'gray')
+      .merge(this.link)
+
+    this.node = this.node.data(data.nodes)
+
+    this.node.exit().remove()
+    this.node = this.node
+      .enter()
+      .append('circle')
+      .attr('class', 'node')
+      .attr('r', 9)
+      .call(d3.drag()
+        .on('start', this.dragstarted)
+        .on('drag', this.dragged)
+        .on('end', this.dragended))
+      .merge(this.node)
+      .text(d => d.id)
+      .attr('fill', d => color(d.group))
+
+    this.textLabels = this.textLabels.data(data.nodes)
+
+    this.textLabels.exit().remove()
+    this.textLabels = this.textLabels
+      .enter()
+      .append('text')
+      .attr('class', 'textLabels')
+      .attr('font-family', 'sans-serif')
+      .attr('font-size', '14px')
+      .attr('fill', 'black')
+      .merge(this.textLabels)
+      .text(d => d.title)
+
+    this.node.on('click', this.handleNodeClick)
+
+    // this.node.append('title')
+    //   .text(d => d.id)
+
+    this.simulation
+      .nodes(data.nodes)
+      .on('tick', this.ticked)
+
+    this.simulation.force('link')
+      .links(data.links)
+
+    this.simulation.alphaTarget(0.9).restart()
   }
 
-  dragged (d) {
-    d.fx = d3.event.x
-    d.fy = d3.event.y
-  }
+  renderGraph () {
+    this.svg = d3.select('svg')
+    const width = this.svg.attr('width')
+    const height = this.svg.attr('height')
 
-  dragended (d) {
-    if (!d3.event.active) this.simulation.alphaTarget(0)
-    d.fx = null
-    d.fy = null
-  }
+    this.link = this.svg.append('g').selectAll('line')
+    this.node = this.svg.append('g').selectAll('circle')
+    this.textLabels = this.svg.append('g').selectAll('text')
 
-  showSearchPopup () {
-    this.setState({
-      searchVisible: true,
-      searchOpen: false
-    }, () => {
-      setTimeout(() => {
-        this.setState({
-          searchOpen: true
-        })
-      }, 25)
-    })
-  }
+    this.simulation = d3.forceSimulation()
+      .force('link', d3.forceLink().distance(75).id(d => d.id))
+      .force('charge', d3.forceManyBody().strength(() => -500))
+      .force('center', d3.forceCenter(width / 2, height / 2))
 
-  hideSearchPopup () {
-    this.setState({
-      searchOpen: false
-    }, () => {
-      setTimeout(() => {
-        this.setState({
-          searchVisible: false
-        })
-      }, 400)
-    })
-  }
+    this.updateGraph()
 
-  handleNodeClick () {
-    const { emptyGraph } = this.state
-    if (emptyGraph) {
-      this.showSearchPopup()
-    }
+    // this.showSearchPopup()
   }
 
   render () {
@@ -185,12 +238,24 @@ class Graph extends Component {
       <svg key="svg" width={window.innerWidth} height={window.innerHeight} />,
       searchVisible && (
         <div
-          key="search"
+          role="button"
+          key="background"
+          onClick={this.hideSearchPopup}
+          onKeyDown={() => {}}
           className={cx(style.searchBackground, searchOpen && style.searchBackgroundOpen)}
+          tabIndex="0"
+        />
+      ),
+      searchVisible && (
+        <div
+          key="search"
+          className={cx(style.search, searchOpen && style.searchOpen)}
+          style={{ left: this.popupX, bottom: (window.innerHeight - this.popupY) + 20 }}
         >
-          <div className={cx(style.search, searchOpen && style.searchOpen)}>
-            <SearchBar />
-          </div>
+          <SearchBar
+            onDataUpdate={this.handleDataUpdate}
+            onHideSearchPopup={this.hideSearchPopup}
+          />
         </div>
       )
     ]

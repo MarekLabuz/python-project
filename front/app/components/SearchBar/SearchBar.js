@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-// import PropTypes from 'prop-types'
+import PropTypes from 'prop-types'
 import debounce from 'lodash/debounce'
 
 // import Map from '../../map'
@@ -28,7 +28,7 @@ class SearchBar extends Component {
 
     this.handleInput = this.handleInput.bind(this)
     this.handleSelect = this.handleSelect.bind(this)
-    this.search = debounce(this.search.bind(this), 250)
+    this.search = debounce(this.search.bind(this), 500)
   }
 
   search (text, timestamp) {
@@ -60,8 +60,13 @@ class SearchBar extends Component {
     }
   }
 
-  handleSelect (text) {
-    console.log(text)
+  handleSelect (id) {
+    const { onHideSearchPopup, onDataUpdate } = this.props
+    onHideSearchPopup()
+    fetch(`http://localhost:5000/movie?id=${id}`)
+      .then(data => data.json())
+      .then(film => onDataUpdate(film))
+      .catch(console.log)
   }
 
   render () {
@@ -84,8 +89,8 @@ class SearchBar extends Component {
                         <div
                           className={style.item}
                           role="button"
-                          onClick={() => this.handleSelect(v.title)}
-                          onKeyDown={e => e.keyCode === 13 && this.handleSelect(v.title)}
+                          onClick={() => this.handleSelect(v.id)}
+                          onKeyDown={e => e.keyCode === 13 && this.handleSelect(v.id)}
                           tabIndex="0"
                         >
                           <span>{v.title}</span>
@@ -102,6 +107,11 @@ class SearchBar extends Component {
       </div>
     )
   }
+}
+
+SearchBar.propTypes = {
+  onHideSearchPopup: PropTypes.func.isRequired,
+  onDataUpdate: PropTypes.func.isRequired
 }
 
 export default SearchBar
