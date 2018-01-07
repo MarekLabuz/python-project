@@ -3,6 +3,7 @@ from config import config
 import psycopg2
 import http.client
 import json
+import urllib.parse
 
 BASE_URL = 'api.themoviedb.org'
 API_KEY = 'ef3a8359454d45c5a58ad9e6dc9913e7'
@@ -49,11 +50,15 @@ conn = getconnection()
 cur = conn.cursor()
 
 
+def search_movies_by_person(person_id):
+    return request('GET', '/3/person/{}/movie_credits?'.format(person_id))
+
+
 def search_movies_by_query(query):
-    return request('GET', '/3/search/movie?query={}&'.format(query))
+    return request('GET', '/3/search/movie?query={}&'.format(urllib.parse.quote(query)))
 
 
-def add_movie_to_db(movie_id):
+def add_movie_to_db(movie_id, by_actor_id):
     movie = request('GET', '/3/movie/{}?'.format(movie_id))
     movie = json.loads(movie)
 
@@ -86,14 +91,20 @@ def add_movie_to_db(movie_id):
 
     # cast
     i = 0
+    if by_actor_id != '':
+        by_actor = list(filter(lambda a: a['id'] == int(by_actor_id), credits['cast']))
+        if len(by_actor) > 0:
+            add_movie_person(movie_id, by_actor_id, by_actor[0]['character'])
+
     for actor in credits['cast']:
         if i == 5:
             break
-        i += 1
-        actor_id = actor['id']
-        if person_not_exists(actor_id):
-            add_person_to_db(actor_id)
-        add_movie_person(movie_id, actor_id, actor['character'])
+        if by_actor_id == '' or int(by_actor_id) != actor['id']:
+            i += 1
+            actor_id = actor['id']
+            if person_not_exists(actor_id):
+                add_person_to_db(actor_id)
+            add_movie_person(movie_id, actor_id, actor['character'])
 
 
 def person_not_exists(director_id):
@@ -117,7 +128,7 @@ def add_movie_person(movie_id, person_id, role):
     cur.execute(sql_insert_movie_person)
 
 
-def get_movie(movie_id):
+def get_movie(movie_id, actor_id):
     sql_select_movie_by_id = "SELECT * FROM movies WHERE id={} LIMIT 1;".format(movie_id)
     cur.execute(sql_select_movie_by_id)
 
@@ -125,7 +136,7 @@ def get_movie(movie_id):
 
     if not movie:
         print("adding movie, actors...")
-        add_movie_to_db(movie_id)
+        add_movie_to_db(movie_id, actor_id)
 
         conn.commit()
         cur.execute(sql_select_movie_by_id)

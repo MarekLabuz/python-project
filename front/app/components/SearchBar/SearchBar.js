@@ -15,14 +15,17 @@ import style from './SearchBar.scss'
 //   { id: 4, title: 'Makbet' }
 // ]
 
-const api = query => fetch(`http://localhost:5000/movies?query=${encodeURI(query)}`)
+const api = {
+  moviesByQuery: query => fetch(`http://localhost:5000/movies?query=${encodeURI(query)}`),
+  moviesByActor: id => fetch(`http://localhost:5000/movies-actor?id=${encodeURI(id)}`)
+}
 
 class SearchBar extends Component {
-  constructor () {
+  constructor (props) {
     super()
 
     this.state = {
-      loading: false,
+      loading: props.node && props.node.group === 'person',
       data: []
     }
 
@@ -31,8 +34,22 @@ class SearchBar extends Component {
     this.search = debounce(this.search.bind(this), 500)
   }
 
+  componentDidMount () {
+    const { node } = this.props
+    if (node.group === 'person') {
+      api.moviesByActor(node.id)
+        .then(data => data.json())
+        .then(({ cast }) => {
+          this.setState({
+            loading: false,
+            data: cast.slice(0, 10)
+          })
+        })
+    }
+  }
+
   search (text, timestamp) {
-    api(text)
+    api.moviesByQuery(text)
       .then(data => data.json())
       .then(({ results }) => {
         if (timestamp === this.inputTimestamp) {
@@ -46,9 +63,7 @@ class SearchBar extends Component {
 
   handleInput (e) {
     this.inputTimestamp = +new Date()
-    this.setState({
-      loading: true
-    })
+    this.setState({ loading: true })
     const text = e.target.value
     if (text.length) {
       this.search(text, this.inputTimestamp)
@@ -61,9 +76,9 @@ class SearchBar extends Component {
   }
 
   handleSelect (id) {
-    const { onHideSearchPopup, onDataUpdate } = this.props
+    const { onHideSearchPopup, onDataUpdate, node } = this.props
     onHideSearchPopup()
-    fetch(`http://localhost:5000/movie?id=${id}`)
+    fetch(`http://localhost:5000/movie?id=${id}&actor_id=${(node && node.id) || ''}`)
       .then(data => data.json())
       .then(film => onDataUpdate(film))
       .catch(console.log)
@@ -71,13 +86,16 @@ class SearchBar extends Component {
 
   render () {
     const { data, loading } = this.state
+    const { node } = this.props
     return (
       <div className={style.container}>
-        <input
-          className={style.input}
-          onInput={this.handleInput}
-          placeholder="Enter movie title"
-        />
+        {node.group === 'mock' && (
+          <input
+            className={style.input}
+            onInput={this.handleInput}
+            placeholder="Enter movie title"
+          />
+        )}
         {
           data.length || loading
             ? (
@@ -110,6 +128,7 @@ class SearchBar extends Component {
 }
 
 SearchBar.propTypes = {
+  node: PropTypes.object.isRequired,
   onHideSearchPopup: PropTypes.func.isRequired,
   onDataUpdate: PropTypes.func.isRequired
 }

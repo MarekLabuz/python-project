@@ -55,6 +55,8 @@ class Graph extends Component {
         links: []
       }
     }
+
+    this.radius = 15
   }
 
   componentDidMount () {
@@ -67,10 +69,13 @@ class Graph extends Component {
     }
   }
 
-  handleNodeClick ({ x, y }) {
-    this.popupX = x
-    this.popupY = y
-    this.showSearchPopup()
+  handleNodeClick (node) {
+    if (node.group === 'mock' || node.group === 'person') {
+      const { x, y } = node
+      this.popupX = x
+      this.popupY = y
+      this.showSearchPopup(node)
+    }
   }
 
   hideSearchPopup () {
@@ -85,10 +90,11 @@ class Graph extends Component {
     })
   }
 
-  showSearchPopup () {
+  showSearchPopup (node) {
     this.setState({
       searchVisible: true,
-      searchOpen: false
+      searchOpen: false,
+      node
     }, () => {
       setTimeout(() => {
         this.setState({
@@ -144,8 +150,8 @@ class Graph extends Component {
       .attr('y2', d => d.target.y)
 
     this.node
-      .attr('cx', d => d.x)
-      .attr('cy', d => d.y)
+      .attr('cx', d => Math.max(this.radius, Math.min(this.width - this.radius, d.x))) // d.x)
+      .attr('cy', d => Math.max(this.radius, Math.min(this.height - this.radius, d.y))) // d.y)
 
     this.textLabels
       .attr('dx', function dx (d) {
@@ -215,8 +221,8 @@ class Graph extends Component {
 
   renderGraph () {
     this.svg = d3.select('svg')
-    const width = this.svg.attr('width')
-    const height = this.svg.attr('height')
+    this.width = this.svg.attr('width')
+    this.height = this.svg.attr('height')
 
     this.link = this.svg.append('g').selectAll('line')
     this.node = this.svg.append('g').selectAll('circle')
@@ -224,8 +230,8 @@ class Graph extends Component {
 
     this.simulation = d3.forceSimulation()
       .force('link', d3.forceLink().distance(75).id(d => d.id))
-      .force('charge', d3.forceManyBody().strength(() => -500))
-      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('charge', d3.forceManyBody().strength(() => -50))
+      .force('center', d3.forceCenter(this.width / 2, this.height / 2))
 
     this.updateGraph()
 
@@ -233,7 +239,7 @@ class Graph extends Component {
   }
 
   render () {
-    const { searchVisible, searchOpen } = this.state
+    const { searchVisible, searchOpen, node } = this.state
     return [
       <svg key="svg" width={window.innerWidth} height={window.innerHeight} />,
       searchVisible && (
@@ -253,6 +259,7 @@ class Graph extends Component {
           style={{ left: this.popupX, bottom: (window.innerHeight - this.popupY) + 20 }}
         >
           <SearchBar
+            node={node}
             onDataUpdate={this.handleDataUpdate}
             onHideSearchPopup={this.hideSearchPopup}
           />
