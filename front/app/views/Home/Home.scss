@@ -1,4 +1,27 @@
-.homeDiv {
-  text-align: center;
-  margin-top: 50px;
+.buttonRow {
+  display: flex;
+  justify-content: center;
+  & > button {
+    font-size: 14px;
+    cursor: pointer;
+    width: 120px;
+    border: none;
+    transition: transform 0.5s;
+    &:active {
+      transform: scale(0.9);
+    }
+  }
+  height: 35px;
+}
+
+.bottomLine {
+  position: fixed;
+  width: 120px;
+  height: 3px;
+  top: 35px;
+  background-color: #0091ff;
+  transform: translate(-50%, 0);
+  pointer-events: none;
+  border-radius: 10px;
+  transition: left 0.2s ease-out;
 }

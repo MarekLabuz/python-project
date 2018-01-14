@@ -150,8 +150,8 @@ class Graph extends Component {
       .attr('y2', d => d.target.y)
 
     this.node
-      .attr('cx', d => Math.max(this.radius, Math.min(this.width - this.radius, d.x))) // d.x)
-      .attr('cy', d => Math.max(this.radius, Math.min(this.height - this.radius, d.y))) // d.y)
+      .attr('cx', d => Math.max(this.radius, Math.min(this.width - this.radius, d.x)))
+      .attr('cy', d => Math.max(this.radius, Math.min(this.height - this.radius, d.y)))
 
     this.textLabels
       .attr('dx', function dx (d) {
@@ -241,7 +241,7 @@ class Graph extends Component {
   render () {
     const { searchVisible, searchOpen, node } = this.state
     return [
-      <svg key="svg" width={window.innerWidth} height={window.innerHeight} />,
+      <svg key="svg" width={window.innerWidth} height={window.innerHeight - 45} />,
       searchVisible && (
         <div
           role="button"
