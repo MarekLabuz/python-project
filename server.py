@@ -3,8 +3,19 @@ from flask_cors import CORS
 
 # from api import search_movies_by_query
 from util import get_movie, get_actor, search_movies_by_query, search_movies_by_person
+import decimal
+import flask.json
+
+class MyJSONEncoder(flask.json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, decimal.Decimal):
+            # Convert decimal instances to strings.
+            return str(obj)
+        return super(MyJSONEncoder, self).default(obj)
 
 app = Flask(__name__)
+app.json_encoder = MyJSONEncoder
 CORS(app)
 
 

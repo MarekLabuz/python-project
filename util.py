@@ -1,5 +1,5 @@
 from config import config
-
+from decimal import Decimal
 import psycopg2
 import http.client
 import json
@@ -165,6 +165,7 @@ def get_movie(movie_id, actor_id):
         movie = cur.fetchone()
     else:
         logging.debug("movie already in the database")
+            
 
     movie = create_dictionary(movie, movies_columns)
 
