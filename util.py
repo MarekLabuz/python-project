@@ -1,5 +1,4 @@
 from config import config
-from decimal import Decimal
 import psycopg2
 import http.client
 import json
@@ -60,6 +59,11 @@ def search_movies_by_person(person_id):
 def search_movies_by_query(query):
     return request('GET', '/3/search/movie?query={}&'.format(urllib.parse.quote(query)))
 
+def search_movies_by_genre(genre_id):
+    return request('GET', '/3/discover/movie?sort_by=popularity.desc&page=1&with_genres={}&'.format(genre_id))
+
+def search_movies_by_year(year):
+    return request('GET', '/3/discover/movie?sort_by=popularity.desc&page=1&primary_release_year={}&'.format(year))
 
 def add_movie_to_db(movie_id, by_actor_id):
     movie = request('GET', '/3/movie/{}?'.format(movie_id))
@@ -91,7 +95,7 @@ def add_movie_to_db(movie_id, by_actor_id):
     # ---------add people connected with the movie to the database:---------
 
     # director
-    if person_not_exist(director_id):
+    if director_id != '' and person_not_exist(director_id):
         cur.execute(add_person_to_db(director_id))
         cur.execute(add_movie_person(movie["id"], director_id, "Director"))
         logging.debug('Director inserted.')
@@ -199,8 +203,87 @@ def get_actor(actor_id):
         actor_details = cur.fetchone()        
         return create_dictionary(actor_details, actors_columns)
  
-# if __name__ == '__main__':
-#     get_movie(1492, '')
-#     get_actor(2454)
-#     # closing connection
-#     cur.close()
+if __name__ == '__main__':
+    # get_movie(83780, '')
+    # get_actor(2454)
+    # # closing connection
+    # cur.close()
+
+genres = [
+     {
+      "id": 28,
+      "name": "Action"
+    },
+    {
+      "id": 12,
+      "name": "Adventure"
+    },
+    {
+      "id": 16,
+      "name": "Animation"
+    },
+    {
+      "id": 35,
+      "name": "Comedy"
+    },
+    {
+      "id": 80,
+      "name": "Crime"
+    },
+    {
+      "id": 99,
+      "name": "Documentary"
+    },
+    {
+      "id": 18,
+      "name": "Drama"
+    },
+    {
+      "id": 10751,
+      "name": "Family"
+    },
+    {
+      "id": 14,
+      "name": "Fantasy"
+    },
+    {
+      "id": 36,
+      "name": "History"
+    },
+    {
+      "id": 27,
+      "name": "Horror"
+    },
+    {
+      "id": 10402,
+      "name": "Music"
+    },
+    {
+      "id": 9648,
+      "name": "Mystery"
+    },
+    {
+      "id": 10749,
+      "name": "Romance"
+    },
+    {
+      "id": 878,
+      "name": "Science Fiction"
+    },
+    {
+      "id": 10770,
+      "name": "TV Movie"
+    },
+    {
+      "id": 53,
+      "name": "Thriller"
+    },
+    {
+      "id": 10752,
+      "name": "War"
+    },
+    {
+      "id": 37,
+      "name": "Western"
+    }
+  ]
