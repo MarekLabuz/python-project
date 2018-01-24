@@ -35,12 +35,12 @@ def movies():
     return Response(search_movies_by_query(query), mimetype='text/json')
 
 @app.route('/movies-genre')
-def movies():
+def movies_genre():
     genre_id = request.args.get('genre_id')
     return Response(search_movies_by_genre(genre_id), mimetype='text/json')
 
 @app.route('/movies-year')
-def movies():
+def movies_year():
     year = request.args.get('year')
     return Response(search_movies_by_year(year), mimetype='text/json')
 
