@@ -165,7 +165,6 @@ def get_movie(movie_id, actor_id):
     people = [create_dictionary(person, ["id", "name"]) for person in people]
 
     movie["people"] = people
-    logging.debug(movie)
     return movie
 
 
