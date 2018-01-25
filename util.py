@@ -119,7 +119,7 @@ def add_movie_to_db(movie_id, by_actor_id, by_keyword_id):
     if by_actor_id != '':
         by_actor = list(filter(lambda a: a['id'] == int(by_actor_id), credits['cast']))
         if len(by_actor) > 0:
-            cur.execute("INSERT INTO movie_person (movie_id, person_id, role_name) VALUES({}, {}, '{}');".format(movie_id, by_actor_id, by_actor[0]['character']))
+            cur.execute("INSERT INTO movie_person (movie_id, person_id, role_name) VALUES({}, {}, '{}');".format(movie_id, by_actor_id, r(by_actor[0]['character'])))
 
     queries_person = []
     queries_movie_person = []

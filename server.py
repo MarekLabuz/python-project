@@ -24,6 +24,9 @@ CORS(app)
 
 
 @app.route('/')
+@app.route('/keywords')
+@app.route('/actor')
+@app.route('/genre')
 def root():
     return send_file('./front/build/index.html', mimetype='text/html')
 
