@@ -1,8 +1,12 @@
 from flask import Flask, send_file, request, Response, jsonify, json
 from flask_cors import CORS
 
-# from api import search_movies_by_query
-from util import get_movie, get_actor, search_movies_by_query, search_movies_by_person, search_movies_by_genre, search_movies_by_keyword
+from util import \
+    get_movie, \
+    search_movies_by_query, \
+    search_movies_by_person, \
+    search_movies_by_genre, \
+    search_movies_by_keyword
 import decimal
 
 
@@ -34,10 +38,12 @@ def movies():
     query = request.args.get('query')
     return Response(search_movies_by_query(query), mimetype='text/json')
 
+
 @app.route('/movies-genre')
 def movies_genre():
     genre_id = request.args.get('genre_id')
     return Response(search_movies_by_genre(genre_id), mimetype='text/json')
+
 
 @app.route('/movies-keyword')
 def movies_year():
@@ -53,12 +59,6 @@ def movie():
     return jsonify(get_movie(movie_id, actor_id, keyword_id))
 
 
-@app.route('/actor')
-def actor():
-    actor_id = request.args.get('id')
-    return jsonify(get_actor(actor_id))
-
-
 @app.route('/movies-actor')
 def movies_actor():
     actor_id = request.args.get('id')
@@ -67,4 +67,3 @@ def movies_actor():
 
 if __name__ == '__main__':
     app.run()
-
