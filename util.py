@@ -1,6 +1,5 @@
 from config import config
-import psycopg2
-import psycopg2.extras
+import psycopg2, psycopg2.extras
 import http.client
 import json
 import urllib.parse
@@ -85,10 +84,7 @@ def add_movie_to_db(movie_id, by_actor_id, by_keyword_id):
             director_id = attr['id']
 
     # add movie to database
-    sql_insert_movie = "INSERT INTO movies (id, title, year, rating, director, length, description, poster_thumb) " \
-                       "VALUES ({}, '{}', '{}', {},'{}', {}, '{}', '{}');"\
-        .format(movie["id"], r(movie.get("title", "")), movie["release_date"], movie["vote_average"], director_id,
-                movie["runtime"], r(movie.get("overview", "")), movie["poster_path"])
+    sql_insert_movie = "INSERT INTO movies (id, title, year, rating, director, length, description, poster_thumb) VALUES ({}, '{}', '{}', {},'{}', {}, '{}', '{}');".format(movie["id"], r(movie.get("title", "")), movie["release_date"], movie["vote_average"], director_id, movie["runtime"], r(movie.get("overview", "")), movie["poster_path"])
     cur.execute(sql_insert_movie)
     conn.commit()
     logging.debug('Movie inserted.')
@@ -96,20 +92,16 @@ def add_movie_to_db(movie_id, by_actor_id, by_keyword_id):
     queries_genres = []
     # add genres
     for attr in movie['genres']:
-        queries_genres.append({"movie_id": movie["id"], "id": attr["id"],"genre": attr["name"]})
-    psycopg2.extras.execute_batch(cur, "INSERT INTO genres (movie_id, id, genre) "
-                                       "VALUES (%(movie_id)s, %(id)s, %(genre)s);", queries_genres)
+       queries_genres.append({"movie_id": movie["id"], "id":attr["id"],"genre":attr["name"]})
+    psycopg2.extras.execute_batch(cur, "INSERT INTO genres (movie_id, id, genre) VALUES (%(movie_id)s, %(id)s, %(genre)s);", queries_genres)
     logging.debug('Genres inserted.')
 
     # ---------add people connected with the movie to the database:---------
 
     # director
     if director_id != '' and person_not_exist(director_id):
-        cur.execute("INSERT INTO people (id, name, popularity, birthday, place_of_birth, gender) "
-                    "VALUES (%(id)s, %(name)s, %(popularity)s, %(birthday)s, %(place_of_birth)s, %(gender)s)",
-                    get_person(director_id))
-        cur.execute("INSERT INTO movie_person (movie_id, person_id, role_name) "
-                    "VALUES({}, {}, '{}');".format(movie["id"], director_id, "Director"))
+        cur.execute("INSERT INTO people (id, name, popularity, birthday, place_of_birth, gender) VALUES (%(id)s, %(name)s, %(popularity)s, %(birthday)s, %(place_of_birth)s, %(gender)s)", get_person(director_id))
+        cur.execute("INSERT INTO movie_person (movie_id, person_id, role_name) VALUES({}, {}, '{}');".format(movie["id"], director_id, "Director"))
 
     if by_actor_id is None:
         by_actor_id = ''
@@ -134,11 +126,8 @@ def add_movie_to_db(movie_id, by_actor_id, by_keyword_id):
                 queries_person.append(get_person(actor_id))
             queries_movie_person.append({"movie_id":movie_id, "person_id":actor_id, "role_name":r(actor['character'])})
 
-    psycopg2.extras.execute_batch(cur, "INSERT INTO people (id, name, popularity, birthday, place_of_birth, gender) "
-                                       "VALUES (%(id)s, %(name)s, %(popularity)s, %(birthday)s, %(place_of_birth)s, "
-                                       "%(gender)s)", queries_person)
-    psycopg2.extras.execute_batch(cur, "INSERT INTO movie_person (movie_id, person_id, role_name) "
-                                       "VALUES (%(movie_id)s, %(person_id)s, %(role_name)s)", queries_movie_person)
+    psycopg2.extras.execute_batch(cur, "INSERT INTO people (id, name, popularity, birthday, place_of_birth, gender) VALUES (%(id)s, %(name)s, %(popularity)s, %(birthday)s, %(place_of_birth)s, %(gender)s)", queries_person)
+    psycopg2.extras.execute_batch(cur, "INSERT INTO movie_person (movie_id, person_id, role_name) VALUES (%(movie_id)s, %(person_id)s, %(role_name)s)", queries_movie_person)
     logging.debug('Actors inserted.')
 
     if by_keyword_id is None:
@@ -147,10 +136,8 @@ def add_movie_to_db(movie_id, by_actor_id, by_keyword_id):
     if by_keyword_id != '':
         by_keyword = list(filter(lambda k: k['id'] == int(by_keyword_id), keywords))
         if len(by_keyword) > 0:
-            cur.execute("INSERT INTO keywords (movie_id, id, keyword) "
-                        "VALUES ({}, {}, '{}');".format(movie_id, by_keyword_id, by_keyword[0]["name"]))
+            cur.execute("INSERT INTO keywords (movie_id, id, keyword) VALUES ({}, {}, '{}');".format(movie_id, by_keyword_id, by_keyword[0]["name"]))
 
-    # add keywords
     j = 0
     queries_keywords = []
     for attr in keywords:
@@ -162,8 +149,7 @@ def add_movie_to_db(movie_id, by_actor_id, by_keyword_id):
             if keyword_not_exist(keyword_id):
                 queries_keywords.append({"movie_id": movie["id"], "id":keyword_id,"keyword":attr["name"]})
 
-    psycopg2.extras.execute_batch(cur, "INSERT INTO keywords (movie_id, id, keyword) "
-                                       "VALUES (%(movie_id)s, %(id)s, %(keyword)s);", queries_keywords)
+    psycopg2.extras.execute_batch(cur, "INSERT INTO keywords (movie_id, id, keyword) VALUES (%(movie_id)s, %(id)s, %(keyword)s);", queries_keywords)
     logging.debug('Keywords inserted.')
 
 
@@ -171,13 +157,11 @@ def runQuery(query):
     cur.execute(query)
     conn.commit()
 
-
 def person_not_exist(director_id):
     sql_select_person_by_id = "SELECT * FROM people WHERE id={} LIMIT 1;".format(director_id)
     cur.execute(sql_select_person_by_id)
     person = cur.fetchone()
     return False if person else True
-
 
 def keyword_not_exist(keyword_id):
     sql_select_keyword_by_id = "SELECT * FROM keywords WHERE id={} LIMIT 1;".format(keyword_id)
@@ -185,15 +169,11 @@ def keyword_not_exist(keyword_id):
     keyword = cur.fetchone()
     return False if keyword else True
 
-
 def get_person(person_id):
     person = request('GET', '/3/person/{}?'.format(person_id))
     person = json.loads(person)
-    ins_pers = {"id": int(person["id"]), "name": r(person.get("name", "")),
-                "popularity": float(person.get("popularity", 0)), "birthday": person.get("birthday", ""),
-                "place_of_birth": r(person.get("place_of_birth", "")), "gender": int(person["gender"])}
+    ins_pers = {"id":int(person["id"]), "name":r(person.get("name", "")), "popularity":float(person.get("popularity", 0)), "birthday":person.get("birthday", ""), "place_of_birth":r(person.get("place_of_birth", "")), "gender":int(person["gender"])}
     return ins_pers
-
 
 def get_movie(movie_id, actor_id, keyword_id):
     sql_select_movie_by_id = "SELECT * FROM movies WHERE id={} LIMIT 1;".format(movie_id)
@@ -213,8 +193,7 @@ def get_movie(movie_id, actor_id, keyword_id):
             
     movie = create_dictionary(movie, movies_columns)
 
-    sql_select_people_by_movie = "SELECT id, name FROM (SELECT * FROM movie_person WHERE movie_id = {}) AS iq " \
-                                 "JOIN people ON person_id = id;".format(movie_id)
+    sql_select_people_by_movie = "SELECT id, name FROM (SELECT * FROM movie_person WHERE movie_id = {}) AS iq JOIN people ON person_id = id;".format(movie_id)
     cur.execute(sql_select_people_by_movie)
     people = cur.fetchall()
     people = [create_dictionary(person, ["id", "name"]) for person in people]
@@ -232,3 +211,28 @@ def get_movie(movie_id, actor_id, keyword_id):
 
     logging.debug(movie)
     return movie
+
+
+def get_actor(actor_id):
+    sql_select_person_by_id = "SELECT * FROM people WHERE id={} LIMIT 1;".format(actor_id)
+    cur.execute(sql_select_person_by_id)
+
+    actor = cur.fetchone()
+    
+    if actor:
+        logging.debug("actor in the database")
+        return create_dictionary(actor, actors_columns)
+    else:
+        logging.debug("adding actor...")
+        add_person_to_db(actor_id)
+        conn.commit()
+
+        cur.execute(sql_select_person_by_id)
+        actor_details = cur.fetchone()        
+        return create_dictionary(actor_details, actors_columns)
+ 
+# if __name__ == '__main__':
+#     get_movie(83819, '')
+#     get_actor(2454)
+#     # closing connection
+#     cur.close()
