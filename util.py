@@ -231,8 +231,8 @@ def get_actor(actor_id):
         actor_details = cur.fetchone()        
         return create_dictionary(actor_details, actors_columns)
  
-if __name__ == '__main__':
-    get_movie(83820, '', '')
-    get_actor(2454)
-    # closing connection
-    cur.close()
+# if __name__ == '__main__':
+#     get_movie(83819, '')
+#     get_actor(2454)
+#     # closing connection
+#     cur.close()
