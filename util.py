@@ -1,9 +1,8 @@
 from config import config
-import psycopg2
+import psycopg2, psycopg2.extras
 import http.client
 import json
 import urllib.parse
-import threading
 import logging 
 
 BASE_URL = 'api.themoviedb.org'
@@ -86,26 +85,24 @@ def add_movie_to_db(movie_id, by_actor_id):
 
     queries_genres = []
     # add genres
-    sql_insert_genres = "INSERT INTO genres (movie_id, genre) VALUES ({}, '{}');"
     for attr in movie['genres']:
-       queries_genres.append(sql_insert_genres.format(movie["id"], attr["name"]))
-    runParallel(queries_genres)
+       queries_genres.append({"movie_id": movie["id"], "genre":attr["name"]})
+    psycopg2.extras.execute_batch(cur, "INSERT INTO genres (movie_id, genre) VALUES (%(movie_id)s, %(genre)s);", queries_genres)
     logging.debug('Genres inserted.')
 
     # ---------add people connected with the movie to the database:---------
 
     # director
     if director_id != '' and person_not_exist(director_id):
-        cur.execute(add_person_to_db(director_id))
-        cur.execute(add_movie_person(movie["id"], director_id, "Director"))
-        logging.debug('Director inserted.')
+        cur.execute("INSERT INTO people (id, name, popularity, birthday, place_of_birth, gender) VALUES (%(id)s, %(name)s, %(popularity)s, %(birthday)s, %(place_of_birth)s, %(gender)s)", get_person(director_id))
+        cur.execute("INSERT INTO movie_person (movie_id, person_id, role_name) VALUES({}, {}, '{}');".format(movie["id"], director_id, "Director"))
 
     # cast
     i = 0
     if by_actor_id != '':
         by_actor = list(filter(lambda a: a['id'] == int(by_actor_id), credits['cast']))
         if len(by_actor) > 0:
-            cur.execute(add_movie_person(movie_id, by_actor_id, by_actor[0]['character']))
+            cur.execute("INSERT INTO movie_person (movie_id, person_id, role_name) VALUES({}, {}, '{}');".format(movie_id, by_actor_id, by_actor[0]['character']))
 
     queries_person = []
     queries_movie_person = []
@@ -117,18 +114,13 @@ def add_movie_to_db(movie_id, by_actor_id):
             i += 1
             actor_id = actor['id']
             if person_not_exist(actor_id):
-                queries_person.append(add_person_to_db(actor_id))
-            queries_movie_person.append(add_movie_person(movie_id, actor_id, actor['character']))
-    runParallel(queries_person)
-    runParallel(queries_movie_person)      
+                queries_person.append(get_person(actor_id))
+            queries_movie_person.append({"movie_id":movie_id, "person_id":actor_id, "role_name":r(actor['character'])})
 
-def runParallel(queries):
-    threads = []
-    for q in queries:
-        t = threading.Thread(target=runQuery, args=(q,))
-        threads.append(t)
-        t.start()
-        logging.debug("Thread: " + q)
+    psycopg2.extras.execute_batch(cur, "INSERT INTO people (id, name, popularity, birthday, place_of_birth, gender) VALUES (%(id)s, %(name)s, %(popularity)s, %(birthday)s, %(place_of_birth)s, %(gender)s)", queries_person)
+    psycopg2.extras.execute_batch(cur, "INSERT INTO movie_person (movie_id, person_id, role_name) VALUES (%(movie_id)s, %(person_id)s, %(role_name)s)", queries_movie_person)
+    logging.debug('Actors inserted.')
+
 
 def runQuery(query):
     cur.execute(query)
@@ -141,18 +133,11 @@ def person_not_exist(director_id):
     return False if person else True
 
 
-def add_person_to_db(person_id):
+def get_person(person_id):
     person = request('GET', '/3/person/{}?'.format(person_id))
     person = json.loads(person)
-
-    sql_insert_person = "INSERT INTO people (id, name, popularity, birthday, place_of_birth, gender) VALUES ({}, '{}', {}, '{}', '{}', {});".format(person["id"], r(person.get("name", "")), person.get("popularity", 0), person.get("birthday", ""), r(person.get("place_of_birth", "")), person["gender"])
-    # cur.execute(sql_insert_person)
-    return sql_insert_person
-
-def add_movie_person(movie_id, person_id, role):
-    sql_insert_movie_person = "INSERT INTO movie_person (movie_id, person_id, role_name) VALUES ({}, {}, '{}');".format(movie_id, person_id, r(role))
-    # cur.execute(sql_insert_movie_person)
-    return sql_insert_movie_person
+    ins_pers = {"id":int(person["id"]), "name":r(person.get("name", "")), "popularity":float(person.get("popularity", 0)), "birthday":person.get("birthday", ""), "place_of_birth":r(person.get("place_of_birth", "")), "gender":int(person["gender"])}
+    return ins_pers
 
 def get_movie(movie_id, actor_id):
     sql_select_movie_by_id = "SELECT * FROM movies WHERE id={} LIMIT 1;".format(movie_id)
@@ -170,7 +155,6 @@ def get_movie(movie_id, actor_id):
     else:
         logging.debug("movie already in the database")
             
-
     movie = create_dictionary(movie, movies_columns)
 
     sql_select_people_by_movie = "SELECT id, name FROM (SELECT * FROM movie_person WHERE movie_id = {}) AS iq JOIN people ON person_id = id;".format(movie_id)
@@ -181,7 +165,7 @@ def get_movie(movie_id, actor_id):
     people = [create_dictionary(person, ["id", "name"]) for person in people]
 
     movie["people"] = people
-
+    logging.debug(movie)
     return movie
 
 
@@ -203,87 +187,8 @@ def get_actor(actor_id):
         actor_details = cur.fetchone()        
         return create_dictionary(actor_details, actors_columns)
  
-if __name__ == '__main__':
-    # get_movie(83780, '')
-    # get_actor(2454)
-    # # closing connection
-    # cur.close()
-
-genres = [
-     {
-      "id": 28,
-      "name": "Action"
-    },
-    {
-      "id": 12,
-      "name": "Adventure"
-    },
-    {
-      "id": 16,
-      "name": "Animation"
-    },
-    {
-      "id": 35,
-      "name": "Comedy"
-    },
-    {
-      "id": 80,
-      "name": "Crime"
-    },
-    {
-      "id": 99,
-      "name": "Documentary"
-    },
-    {
-      "id": 18,
-      "name": "Drama"
-    },
-    {
-      "id": 10751,
-      "name": "Family"
-    },
-    {
-      "id": 14,
-      "name": "Fantasy"
-    },
-    {
-      "id": 36,
-      "name": "History"
-    },
-    {
-      "id": 27,
-      "name": "Horror"
-    },
-    {
-      "id": 10402,
-      "name": "Music"
-    },
-    {
-      "id": 9648,
-      "name": "Mystery"
-    },
-    {
-      "id": 10749,
-      "name": "Romance"
-    },
-    {
-      "id": 878,
-      "name": "Science Fiction"
-    },
-    {
-      "id": 10770,
-      "name": "TV Movie"
-    },
-    {
-      "id": 53,
-      "name": "Thriller"
-    },
-    {
-      "id": 10752,
-      "name": "War"
-    },
-    {
-      "id": 37,
-      "name": "Western"
-    }
-  ]
+# if __name__ == '__main__':
+#     get_movie(83819, '')
+#     get_actor(2454)
+#     # closing connection
+#     cur.close()
