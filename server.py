@@ -2,7 +2,7 @@ from flask import Flask, send_file, request, Response, jsonify, json
 from flask_cors import CORS
 
 # from api import search_movies_by_query
-from util import get_movie, get_actor, search_movies_by_query, search_movies_by_person
+from util import get_movie, get_actor, search_movies_by_query, search_movies_by_person, search_movies_by_genre, search_movies_by_keyword
 import decimal
 
 
@@ -39,17 +39,18 @@ def movies_genre():
     genre_id = request.args.get('genre_id')
     return Response(search_movies_by_genre(genre_id), mimetype='text/json')
 
-@app.route('/movies-year')
+@app.route('/movies-keyword')
 def movies_year():
-    year = request.args.get('year')
-    return Response(search_movies_by_year(year), mimetype='text/json')
+    keyword_id = request.args.get('keyword_id')
+    return Response(search_movies_by_keyword(keyword_id), mimetype='text/json')
 
 
 @app.route('/movie')
 def movie():
     movie_id = request.args.get('id')
     actor_id = request.args.get('actor_id')
-    return jsonify(get_movie(movie_id, actor_id))
+    keyword_id = request.args.get('keyword_id')
+    return jsonify(get_movie(movie_id, actor_id, keyword_id))
 
 
 @app.route('/actor')

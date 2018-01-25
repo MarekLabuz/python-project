@@ -4,15 +4,33 @@ import Graph from '../Graph/Graph'
 
 import style from './Home.scss'
 
+const getTabNumber = () => {
+  switch (window.location.pathname) {
+    case '/actor':
+      return -1
+    case '/genre':
+      return 0
+    case '/keywords':
+      return 1
+    default:
+      window.location.href = '/actor'
+      return 0
+  }
+}
+
 class Home extends Component {
   state = {
-    currentTab: -1,
-    left: this.getLeft(-1),
-    tabs: ['Search By Actor', 'Search By Genre', 'Search By Year']
+    currentTab: getTabNumber(),
+    left: this.getLeft(getTabNumber()),
+    tabs: ['Search By Actor', 'Search By Genre', 'Search By Keywords']
   }
 
   getLeft (tabNumber) {
-    return `calc(50% + ${(tabNumber !== undefined ? tabNumber : this.state.currentTab) * 120}px)`
+    return `calc(50% + ${(tabNumber !== undefined ? tabNumber : this.state.currentTab) * 140}px)`
+  }
+
+  handleTabClicked (tabNumber) {
+    window.location.href = (tabNumber === -1 && '/actor') || (tabNumber === 0 && '/genre') || '/keywords'
   }
 
   render () {
@@ -30,7 +48,7 @@ class Home extends Component {
                 <button
                   key={tabNumber}
                   onMouseOver={() => this.setState({ left: this.getLeft(tabNumber) })}
-                  onClick={() => this.setState({ currentTab: tabNumber })}
+                  onClick={() => this.handleTabClicked(tabNumber)}
                   style={{ color: tabNumber === currentTab ? '#0091ff' : 'black' }}
                 >
                   {tab}

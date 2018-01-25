@@ -2,22 +2,15 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import debounce from 'lodash/debounce'
 
-// import Map from '../../map'
 import Loader from '../Loader/Loader'
-// import API from '../../api'
 
 import style from './SearchBar.scss'
 
-// const mockData = [
-//   { id: 1, title: 'Mother' },
-//   { id: 2, title: 'Bałwanek' },
-//   { id: 3, title: 'Prometeusz' },
-//   { id: 4, title: 'Makbet' }
-// ]
-
 const api = {
   moviesByQuery: query => fetch(`http://localhost:5000/movies?query=${encodeURI(query)}`),
-  moviesByActor: id => fetch(`http://localhost:5000/movies-actor?id=${encodeURI(id)}`)
+  moviesByActor: id => fetch(`http://localhost:5000/movies-actor?id=${encodeURI(id)}`),
+  moviesByGenre: id => fetch(`http://localhost:5000/movies-genre?genre_id=${encodeURI(id)}`),
+  moviesByKeyword: id => fetch(`http://localhost:5000/movies-keyword?keyword_id=${encodeURI(id)}`)
 }
 
 class SearchBar extends Component {
@@ -25,7 +18,7 @@ class SearchBar extends Component {
     super()
 
     this.state = {
-      loading: props.node && props.node.group === 'person',
+      loading: props.node && props.node.group === 'connection',
       data: []
     }
 
@@ -35,16 +28,40 @@ class SearchBar extends Component {
   }
 
   componentDidMount () {
-    const { node } = this.props
-    if (node.group === 'person') {
-      api.moviesByActor(node.id)
-        .then(data => data.json())
-        .then(({ cast }) => {
-          this.setState({
-            loading: false,
-            data: cast.slice(0, 10)
-          })
-        })
+    const { node, currentTab } = this.props
+    if (node.group === 'connection') {
+      switch (currentTab) {
+        case -1:
+          api.moviesByActor(node.id)
+            .then(data => data.json())
+            .then(({ cast }) => {
+              this.setState({
+                loading: false,
+                data: cast.slice(0, 10)
+              })
+            })
+          break
+        case 0:
+          api.moviesByGenre(node.id)
+            .then(data => data.json())
+            .then(({ results }) => {
+              this.setState({
+                loading: false,
+                data: results.slice(0, 10)
+              })
+            })
+          break
+        default:
+          api.moviesByKeyword(node.id)
+            .then(data => data.json())
+            .then(({ results }) => {
+              this.setState({
+                loading: false,
+                data: results.slice(0, 10)
+              })
+            })
+          break
+      }
     }
   }
 
@@ -76,9 +93,14 @@ class SearchBar extends Component {
   }
 
   handleSelect (id) {
-    const { onHideSearchPopup, onDataUpdate, node } = this.props
+    const { onHideSearchPopup, onDataUpdate, node, currentTab } = this.props
     onHideSearchPopup()
-    fetch(`http://localhost:5000/movie?id=${id}&actor_id=${(node && node.id) || ''}`)
+    const promise = (
+      currentTab === -1
+        ? () => fetch(`http://localhost:5000/movie?id=${id}&actor_id=${(node && node.id) || ''}`)
+        : () => fetch(`http://localhost:5000/movie?id=${id}&keyword_id=${(node && node.id) || ''}`)
+    )
+    promise()
       .then(data => data.json())
       .then(film => onDataUpdate(film))
       .catch(console.log)
@@ -130,7 +152,8 @@ class SearchBar extends Component {
 SearchBar.propTypes = {
   node: PropTypes.object.isRequired,
   onHideSearchPopup: PropTypes.func.isRequired,
-  onDataUpdate: PropTypes.func.isRequired
+  onDataUpdate: PropTypes.func.isRequired,
+  currentTab: PropTypes.number.isRequired
 }
 
 export default SearchBar
