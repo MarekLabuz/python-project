@@ -10,8 +10,11 @@ const getTabNumber = () => {
       return -1
     case '/genre':
       return 0
-    default:
+    case '/keywords':
       return 1
+    default:
+      window.location.href = '/actor'
+      return 0
   }
 }
 
@@ -19,15 +22,15 @@ class Home extends Component {
   state = {
     currentTab: getTabNumber(),
     left: this.getLeft(getTabNumber()),
-    tabs: ['Search By Actor', 'Search By Genre', 'Search By Year']
+    tabs: ['Search By Actor', 'Search By Genre', 'Search By Keywords']
   }
 
   getLeft (tabNumber) {
-    return `calc(50% + ${(tabNumber !== undefined ? tabNumber : this.state.currentTab) * 120}px)`
+    return `calc(50% + ${(tabNumber !== undefined ? tabNumber : this.state.currentTab) * 140}px)`
   }
 
   handleTabClicked (tabNumber) {
-    window.location.href = (tabNumber === -1 && '/actor') || (tabNumber === 0 && '/genre') || '/year'
+    window.location.href = (tabNumber === -1 && '/actor') || (tabNumber === 0 && '/genre') || '/keywords'
   }
 
   render () {

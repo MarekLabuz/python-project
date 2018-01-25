@@ -10,7 +10,7 @@ const api = {
   moviesByQuery: query => fetch(`http://localhost:5000/movies?query=${encodeURI(query)}`),
   moviesByActor: id => fetch(`http://localhost:5000/movies-actor?id=${encodeURI(id)}`),
   moviesByGenre: id => fetch(`http://localhost:5000/movies-genre?genre_id=${encodeURI(id)}`),
-  moviesByYear: year => fetch(`http://localhost:5000/movies-year?year=${encodeURI(year)}`)
+  moviesByKeyword: id => fetch(`http://localhost:5000/movies-keyword?keyword_id=${encodeURI(id)}`)
 }
 
 class SearchBar extends Component {
@@ -44,20 +44,20 @@ class SearchBar extends Component {
         case 0:
           api.moviesByGenre(node.id)
             .then(data => data.json())
-            .then(({ cast }) => {
+            .then(({ results }) => {
               this.setState({
                 loading: false,
-                data: cast.slice(0, 10)
+                data: results.slice(0, 10)
               })
             })
           break
         default:
-          api.moviesByYear(node.id)
+          api.moviesByKeyword(node.id)
             .then(data => data.json())
-            .then(({ cast }) => {
+            .then(({ results }) => {
               this.setState({
                 loading: false,
-                data: cast.slice(0, 10)
+                data: results.slice(0, 10)
               })
             })
           break
@@ -93,9 +93,14 @@ class SearchBar extends Component {
   }
 
   handleSelect (id) {
-    const { onHideSearchPopup, onDataUpdate, node } = this.props
+    const { onHideSearchPopup, onDataUpdate, node, currentTab } = this.props
     onHideSearchPopup()
-    fetch(`http://localhost:5000/movie?id=${id}&actor_id=${(node && node.id) || ''}`)
+    const promise = (
+      currentTab === -1
+        ? () => fetch(`http://localhost:5000/movie?id=${id}&actor_id=${(node && node.id) || ''}`)
+        : () => fetch(`http://localhost:5000/movie?id=${id}&keyword_id=${(node && node.id) || ''}`)
+    )
+    promise()
       .then(data => data.json())
       .then(film => onDataUpdate(film))
       .catch(console.log)

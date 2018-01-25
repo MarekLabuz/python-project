@@ -7,33 +7,6 @@ import SearchBar from '../../components/SearchBar/SearchBar'
 
 import style from './Graph.scss'
 
-// const data = {
-//   nodes: [
-//     { id: 'Mother', group: 'film' },
-//     { id: 'Pasażerowie', group: 'film' },
-//     { id: 'Bałwanek', group: 'film' },
-//     { id: 'X-Men', group: 'film' },
-//     { id: 'Fassbender', group: 'actor' },
-//     { id: 'Lawrence', group: 'actor' },
-//     { id: 'Kilmer', group: 'actor' }
-//   ],
-//   links: [
-//     { source: 'Bałwanek', target: 'Fassbender', value: 1 },
-//     { source: 'Bałwanek', target: 'Kilmer', value: 1 },
-//     { source: 'X-Men', target: 'Fassbender', value: 1 },
-//     { source: 'X-Men', target: 'Lawrence', value: 1 },
-//     { source: 'Pasażerowie', target: 'Lawrence', value: 1 },
-//     { source: 'Mother', target: 'Lawrence', value: 1 }
-//   ]
-// }
-
-// const data = {
-//   nodes: [
-//     { id: 0, title: 'Click Me!', group: 'film' }
-//   ],
-//   links: []
-// }
-
 class Graph extends Component {
   constructor () {
     super()
@@ -130,20 +103,20 @@ class Graph extends Component {
         break
       }
       case 0: {
-        const nodesIds = [film.id, ...film.people.map(person => person.id)]
-        const linksIds = film.people.map(person => ({ source: film.id, target: person.id }))
+        const nodesIds = [film.id, ...film.genres.map(genre => genre.id)]
+        const linksIds = film.genres.map(genre => ({ source: film.id, target: genre.id }))
         this.setState(state => ({
           data: {
             nodes: state.data.nodes
               .filter(({ id }) => !nodesIds.includes(id) && id !== 0)
               .concat([{ id: film.id, title: film.title, group: 'film' }])
-              .concat(film.people.map(person => ({ id: person.id, title: person.name, group: 'connection' }))),
+              .concat(film.genres.map(genre => ({ id: genre.id, title: genre.name, group: 'connection' }))),
             links: state.data.links
               .filter(({ source, target }) => !linksIds.some(link => link.source === source.id && link.target === target.id))
               .map(link => ({ ...link, source: link.source.id, target: link.target.id }))
-              .concat(film.people.map(person => ({
+              .concat(film.genres.map(genre => ({
                 source: film.id,
-                target: person.id,
+                target: genre.id,
                 value: 1
               })))
           }
@@ -151,20 +124,20 @@ class Graph extends Component {
         break
       }
       default: {
-        const nodesIds = [film.id, ...film.people.map(person => person.id)]
-        const linksIds = film.people.map(person => ({ source: film.id, target: person.id }))
+        const nodesIds = [film.id, ...film.keywords.map(keyword => keyword.id)]
+        const linksIds = film.keywords.map(keyword => ({ source: film.id, target: keyword.id }))
         this.setState(state => ({
           data: {
             nodes: state.data.nodes
               .filter(({ id }) => !nodesIds.includes(id) && id !== 0)
               .concat([{ id: film.id, title: film.title, group: 'film' }])
-              .concat(film.people.map(person => ({ id: person.id, title: person.name, group: 'connection' }))),
+              .concat(film.keywords.map(keyword => ({ id: keyword.id, title: keyword.name, group: 'connection' }))),
             links: state.data.links
               .filter(({ source, target }) => !linksIds.some(link => link.source === source.id && link.target === target.id))
               .map(link => ({ ...link, source: link.source.id, target: link.target.id }))
-              .concat(film.people.map(person => ({
+              .concat(film.keywords.map(keyword => ({
                 source: film.id,
-                target: person.id,
+                target: keyword.id,
                 value: 1
               })))
           }

@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS public.movies CASCADE;
 DROP TABLE IF EXISTS public.people CASCADE;
 DROP TABLE IF EXISTS public.movie_person;
 DROP TABLE IF EXISTS public.genres;
+DROP TABLE IF EXISTS public.keywords;
 
 CREATE TABLE public.movies
 (
@@ -67,8 +68,27 @@ WITH (
 CREATE TABLE public.genres
 (
     movie_id integer NOT NULL,
+    id integer NOT NULL,
     genre text NOT NULL,
-    PRIMARY KEY (movie_id, genre),
+    PRIMARY KEY (movie_id, id),
+    CONSTRAINT movie_id FOREIGN KEY (movie_id)
+        REFERENCES public.movies (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+WITH (
+    OIDS = FALSE
+);
+
+--ALTER TABLE public.genres
+--    OWNER to postgres;
+
+CREATE TABLE public.keywords
+(
+    movie_id integer NOT NULL,
+    id integer NOT NULL,
+    keyword text NOT NULL,
+    PRIMARY KEY (movie_id, id),
     CONSTRAINT movie_id FOREIGN KEY (movie_id)
         REFERENCES public.movies (id) MATCH SIMPLE
         ON UPDATE NO ACTION
