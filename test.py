@@ -24,7 +24,6 @@ class FlaskrTestCase(unittest.TestCase):
         response = tester.get('/movie?id=83824&actor_id=', content_type='html/text')
         self.assertIn('\"people\":', response.get_data(as_text=True))
 
-
     def test_5(self):
         tester = app.test_client(self)
         response = tester.get('/movie?id=83824&actor_id=108215', content_type='html/text')
@@ -35,11 +34,6 @@ class FlaskrTestCase(unittest.TestCase):
         response = tester.get('/movie?id=83824&actor_id=108215', content_type='html/text')
         self.assertFalse(util.person_not_exist('26209'))
 
-# czy zawiera title <- struktura
-
 
 if __name__ == '__main__':
 	unittest.main()
-
-
-	# powioazania wiele do wielu 
